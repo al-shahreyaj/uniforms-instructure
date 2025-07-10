@@ -10,227 +10,59 @@ $ npm install uniforms-unstyled
 
 For more in depth documentation see [uniforms.tools](https://uniforms.tools).
 
-# Custom Uniforms Theme with InstructureUI
+# Custom Uniforms Theme with InstructureUI (Quick Guide)
 
-This guide explains how to implement a custom [uniforms](https://uniforms.tools/) theme that uses [InstructureUI](https://instructure.design/) components for rendering form fields.
-
----
-
-## 1. Project Setup
-
-### a. Install Required Packages
-
-```
-npm install uniforms @instructure/ui-text-input @instructure/ui-checkbox @instructure/ui-buttons
-npm install --save-dev typescript @types/react @types/react-dom @types/lodash @types/invariant
-```
+You can quickly create a custom uniforms theme using InstructureUI by copying the `uniforms-unstyled` module and updating its components to use InstructureUI components.
 
 ---
 
-## 2. Create the Theme Directory
+## Steps
 
-Organize your theme in a directory, e.g.:
+1. **Copy the Module**
+   - Duplicate the `uniforms-unstyled` source (or use it as a template).
+   - Place it in your project, e.g. `src/uniforms-instructure/`.
 
-```
-src/uniforms-instructure/
-  src/
-    TextField.tsx
-    BoolField.tsx
-    SubmitField.tsx
-    ...
-  package.json
-  tsconfig.base.json
-  tsconfig.cjs.json
-  tsconfig.esm.json
-```
+2. **Install Dependencies**
+   ```sh
+   npm install uniforms @instructure/ui
+   ```
 
----
+3. **Update Field Components**
+   - Replace raw HTML in each field (e.g. `TextField`, `BoolField`, `SubmitField`) with InstructureUI components:
+     - Use `<TextInput />` for text fields
+     - Use `<Checkbox />` for boolean fields
+     - Use `<Button />` for submit
 
-## 3. Implement Field Components
+   Example for `TextField`:
+   ```tsx
+   import { TextInput } from '@instructure/ui-text-input';
+   // ...
+   <TextInput
+     value={value ?? ''}
+     onChange={(_e, val) => onChange(val)}
+     // ...other props
+   />
+   ```
 
-### Example: TextField using InstructureUI
+4. **Build (Optional)**
+   - If you want CJS/ESM outputs, add TypeScript configs and run:
+     ```sh
+     npm run build:cjs --prefix src/uniforms-instructure
+     npm run build:esm --prefix src/uniforms-instructure
+     ```
 
-```tsx
-import React from 'react';
-import { HTMLFieldProps, connectField, filterDOMProps } from 'uniforms';
-import { TextInput } from '@instructure/ui-text-input';
-
-export type TextFieldProps = HTMLFieldProps<string, HTMLDivElement, { inputRef?: ((inputElement: HTMLInputElement | null) => void) | undefined }>;
-
-function Text({
-  autoComplete,
-  disabled,
-  id,
-  inputRef,
-  label,
-  name,
-  onChange,
-  placeholder,
-  readOnly,
-  type,
-  value,
-  error,
-  ...props
-}: TextFieldProps) {
-  const allowedTypes = ['text', 'email', 'url', 'tel', 'search', 'password'];
-  const inputType = allowedTypes.includes(type as string) ? type : 'text';
-  const inputRefFn = typeof inputRef === 'function' ? inputRef : undefined;
-  return (
-    <div {...filterDOMProps(props)}>
-      <TextInput
-        id={id}
-        name={name}
-        renderLabel={label}
-        value={value ?? ''}
-        onChange={(_e, val: string) => onChange(val)}
-        autoComplete={autoComplete}
-        disabled={disabled}
-        readOnly={readOnly}
-        inputRef={inputRefFn}
-        type={inputType as any}
-        placeholder={placeholder}
-        messages={typeof error === 'string' ? [{ text: error, type: 'error' }] : []}
-      />
-    </div>
-  );
-}
-
-Text.defaultProps = { type: 'text' };
-
-export default connectField<TextFieldProps>(Text, { kind: 'leaf' });
-```
-
-### Example: BoolField using InstructureUI
-
-```tsx
-import React from 'react';
-import { HTMLFieldProps, connectField, filterDOMProps } from 'uniforms';
-import { Checkbox } from '@instructure/ui-checkbox';
-
-export type BoolFieldProps = HTMLFieldProps<boolean, HTMLDivElement, { inputRef?: any }>;
-
-function Bool({
-  disabled,
-  id,
-  inputRef,
-  label,
-  name,
-  onChange,
-  readOnly,
-  value,
-  error,
-  ...props
-}: BoolFieldProps) {
-  return (
-    <div {...filterDOMProps(props)}>
-      <Checkbox
-        id={id}
-        name={name}
-        label={label}
-        checked={!!value}
-        onChange={(event: any, data?: any) => {
-          if (!disabled && !readOnly) {
-            if (data && typeof data.checked === 'boolean') {
-              onChange(data.checked);
-            } else if (event && typeof event.target?.checked === 'boolean') {
-              onChange(event.target.checked);
-            } else {
-              onChange(!value);
-            }
-          }
-        }}
-        disabled={disabled}
-        readOnly={readOnly}
-        inputRef={inputRef}
-        messages={typeof error === 'string' ? [{ text: error, type: 'error' }] : []}
-      />
-    </div>
-  );
-}
-
-export default connectField<BoolFieldProps>(Bool, { kind: 'leaf' });
-```
-
-### Example: SubmitField using InstructureUI
-
-```tsx
-import React from 'react';
-import { HTMLFieldProps, connectField, filterDOMProps } from 'uniforms';
-import { Button } from '@instructure/ui-buttons';
-
-export type SubmitFieldProps = HTMLFieldProps<unknown, HTMLDivElement, { inputRef?: React.Ref<HTMLInputElement> }>;
-
-function Submit({
-  disabled,
-  inputRef,
-  value,
-  ...props
-}: SubmitFieldProps) {
-  return (
-    <div {...filterDOMProps(props)}>
-      <Button
-        type="submit"
-        color="primary"
-        disabled={!!disabled}
-        margin="small"
-        ref={inputRef as any}
-      >
-        {typeof value === 'string' ? value : 'Submit'}
-      </Button>
-    </div>
-  );
-}
-
-Submit.defaultProps = { value: 'Submit' };
-
-export default connectField<SubmitFieldProps>(Submit, { kind: 'leaf' });
-```
+5. **Use Your Theme**
+   - Import and use your custom theme in uniforms forms:
+     ```js
+     import { AutoForm } from './uniforms-instructure';
+     <AutoForm schema={yourSchema} />
+     ```
 
 ---
 
-## 4. Export All Fields in an Index File
-
-```ts
-// src/uniforms-instructure/src/index.ts
-export { default as TextField } from './TextField';
-export { default as BoolField } from './BoolField';
-export { default as SubmitField } from './SubmitField';
-// ...export other fields as needed
-```
-
----
-
-## 5. Build the Theme (for CJS/ESM output)
-
-Make sure you have `tsconfig.cjs.json`, `tsconfig.esm.json`, and `tsconfig.base.json` in your theme directory. Then run:
-
-```
-npm run build:cjs --prefix src/uniforms-instructure
-npm run build:esm --prefix src/uniforms-instructure
-```
-
----
-
-## 6. Use Your Theme in a Uniforms Form
-
-```js
-import { AutoForm } from './uniforms-instructure';
-// or import specific fields
-import { TextField, BoolField, SubmitField } from './uniforms-instructure';
-
-<AutoForm schema={yourSchema} />
-```
-
----
-
-## 7. Tips
-- Make sure your uniforms theme exports from the correct entry point (e.g., `index.js` re-exports from `src/index.ts`).
+**Tip:**
 - Ignore your build output (`esm/`, `cjs/`) in `.eslintignore`.
-- Rebuild your theme after making changes to field components.
-- You can extend this pattern for all field types (Select, Radio, etc.) using the corresponding InstructureUI components.
+- Rebuild after making changes.
+- Extend for other field types as needed.
 
----
-
-## 8. Resources
-- [Uniforms Documentation](https://uniforms.tools/docs/)
-- [InstructureUI Documentation](https://instructure.design/)
+For more, see [Uniforms Docs](https://uniforms.tools/) and [InstructureUI Docs](https://instructure.design/).
