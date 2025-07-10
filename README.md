@@ -1,70 +1,236 @@
-# Getting Started with Create React App
+# uniforms-unstyled
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+> Unstyled components for `uniforms`.
 
-## Available Scripts
+## Install
 
-In the project directory, you can run:
+```sh
+$ npm install uniforms-unstyled
+```
 
-### `npm start`
+For more in depth documentation see [uniforms.tools](https://uniforms.tools).
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+# Custom Uniforms Theme with InstructureUI
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+This guide explains how to implement a custom [uniforms](https://uniforms.tools/) theme that uses [InstructureUI](https://instructure.design/) components for rendering form fields.
 
-### `npm test`
+---
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 1. Project Setup
 
-### `npm run build`
+### a. Install Required Packages
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
+npm install uniforms @instructure/ui-text-input @instructure/ui-checkbox @instructure/ui-buttons
+npm install --save-dev typescript @types/react @types/react-dom @types/lodash @types/invariant
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 2. Create the Theme Directory
 
-### `npm run eject`
+Organize your theme in a directory, e.g.:
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```
+src/uniforms-instructure/
+  src/
+    TextField.tsx
+    BoolField.tsx
+    SubmitField.tsx
+    ...
+  package.json
+  tsconfig.base.json
+  tsconfig.cjs.json
+  tsconfig.esm.json
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## 3. Implement Field Components
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Example: TextField using InstructureUI
 
-## Learn More
+```tsx
+import React from 'react';
+import { HTMLFieldProps, connectField, filterDOMProps } from 'uniforms';
+import { TextInput } from '@instructure/ui-text-input';
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+export type TextFieldProps = HTMLFieldProps<string, HTMLDivElement, { inputRef?: ((inputElement: HTMLInputElement | null) => void) | undefined }>;
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+function Text({
+  autoComplete,
+  disabled,
+  id,
+  inputRef,
+  label,
+  name,
+  onChange,
+  placeholder,
+  readOnly,
+  type,
+  value,
+  error,
+  ...props
+}: TextFieldProps) {
+  const allowedTypes = ['text', 'email', 'url', 'tel', 'search', 'password'];
+  const inputType = allowedTypes.includes(type as string) ? type : 'text';
+  const inputRefFn = typeof inputRef === 'function' ? inputRef : undefined;
+  return (
+    <div {...filterDOMProps(props)}>
+      <TextInput
+        id={id}
+        name={name}
+        renderLabel={label}
+        value={value ?? ''}
+        onChange={(_e, val: string) => onChange(val)}
+        autoComplete={autoComplete}
+        disabled={disabled}
+        readOnly={readOnly}
+        inputRef={inputRefFn}
+        type={inputType as any}
+        placeholder={placeholder}
+        messages={typeof error === 'string' ? [{ text: error, type: 'error' }] : []}
+      />
+    </div>
+  );
+}
 
-### Code Splitting
+Text.defaultProps = { type: 'text' };
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+export default connectField<TextFieldProps>(Text, { kind: 'leaf' });
+```
 
-### Analyzing the Bundle Size
+### Example: BoolField using InstructureUI
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```tsx
+import React from 'react';
+import { HTMLFieldProps, connectField, filterDOMProps } from 'uniforms';
+import { Checkbox } from '@instructure/ui-checkbox';
 
-### Making a Progressive Web App
+export type BoolFieldProps = HTMLFieldProps<boolean, HTMLDivElement, { inputRef?: any }>;
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+function Bool({
+  disabled,
+  id,
+  inputRef,
+  label,
+  name,
+  onChange,
+  readOnly,
+  value,
+  error,
+  ...props
+}: BoolFieldProps) {
+  return (
+    <div {...filterDOMProps(props)}>
+      <Checkbox
+        id={id}
+        name={name}
+        label={label}
+        checked={!!value}
+        onChange={(event: any, data?: any) => {
+          if (!disabled && !readOnly) {
+            if (data && typeof data.checked === 'boolean') {
+              onChange(data.checked);
+            } else if (event && typeof event.target?.checked === 'boolean') {
+              onChange(event.target.checked);
+            } else {
+              onChange(!value);
+            }
+          }
+        }}
+        disabled={disabled}
+        readOnly={readOnly}
+        inputRef={inputRef}
+        messages={typeof error === 'string' ? [{ text: error, type: 'error' }] : []}
+      />
+    </div>
+  );
+}
 
-### Advanced Configuration
+export default connectField<BoolFieldProps>(Bool, { kind: 'leaf' });
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### Example: SubmitField using InstructureUI
 
-### Deployment
+```tsx
+import React from 'react';
+import { HTMLFieldProps, connectField, filterDOMProps } from 'uniforms';
+import { Button } from '@instructure/ui-buttons';
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+export type SubmitFieldProps = HTMLFieldProps<unknown, HTMLDivElement, { inputRef?: React.Ref<HTMLInputElement> }>;
 
-### `npm run build` fails to minify
+function Submit({
+  disabled,
+  inputRef,
+  value,
+  ...props
+}: SubmitFieldProps) {
+  return (
+    <div {...filterDOMProps(props)}>
+      <Button
+        type="submit"
+        color="primary"
+        disabled={!!disabled}
+        margin="small"
+        ref={inputRef as any}
+      >
+        {typeof value === 'string' ? value : 'Submit'}
+      </Button>
+    </div>
+  );
+}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Submit.defaultProps = { value: 'Submit' };
+
+export default connectField<SubmitFieldProps>(Submit, { kind: 'leaf' });
+```
+
+---
+
+## 4. Export All Fields in an Index File
+
+```ts
+// src/uniforms-instructure/src/index.ts
+export { default as TextField } from './TextField';
+export { default as BoolField } from './BoolField';
+export { default as SubmitField } from './SubmitField';
+// ...export other fields as needed
+```
+
+---
+
+## 5. Build the Theme (for CJS/ESM output)
+
+Make sure you have `tsconfig.cjs.json`, `tsconfig.esm.json`, and `tsconfig.base.json` in your theme directory. Then run:
+
+```
+npm run build:cjs --prefix src/uniforms-instructure
+npm run build:esm --prefix src/uniforms-instructure
+```
+
+---
+
+## 6. Use Your Theme in a Uniforms Form
+
+```js
+import { AutoForm } from './uniforms-instructure';
+// or import specific fields
+import { TextField, BoolField, SubmitField } from './uniforms-instructure';
+
+<AutoForm schema={yourSchema} />
+```
+
+---
+
+## 7. Tips
+- Make sure your uniforms theme exports from the correct entry point (e.g., `index.js` re-exports from `src/index.ts`).
+- Ignore your build output (`esm/`, `cjs/`) in `.eslintignore`.
+- Rebuild your theme after making changes to field components.
+- You can extend this pattern for all field types (Select, Radio, etc.) using the corresponding InstructureUI components.
+
+---
+
+## 8. Resources
+- [Uniforms Documentation](https://uniforms.tools/docs/)
+- [InstructureUI Documentation](https://instructure.design/)
