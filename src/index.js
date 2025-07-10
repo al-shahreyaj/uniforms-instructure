@@ -3,11 +3,15 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { InstUISettingsProvider } from '@instructure/ui';
+import { canvas } from '@instructure/ui-themes';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <InstUISettingsProvider theme={canvas}>
+      <App />
+    </InstUISettingsProvider>
   </React.StrictMode>
 );
 

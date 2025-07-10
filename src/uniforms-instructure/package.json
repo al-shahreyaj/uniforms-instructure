@@ -1,0 +1,49 @@
+{
+  "name": "uniforms-unstyled",
+  "version": "4.0.0",
+  "license": "MIT",
+  "main": "./cjs/index.js",
+  "module": "./esm/index.js",
+  "sideEffects": false,
+  "description": "Unstyled components for uniforms.",
+  "repository": "https://github.com/vazco/uniforms/tree/master/packages/uniforms-unstyled",
+  "bugs": "https://github.com/vazco/uniforms/issues",
+  "funding": "https://github.com/vazco/uniforms?sponsor=1",
+  "keywords": [
+    "form",
+    "forms",
+    "meteor",
+    "react",
+    "react-component",
+    "schema",
+    "validation"
+  ],
+  "files": [
+    "cjs/*.d.ts",
+    "cjs/*.js",
+    "esm/*.d.ts",
+    "esm/*.js",
+    "src/*.ts",
+    "src/*.tsx"
+  ],
+  "peerDependencies": {
+    "react": "^18.0.0 || ^17.0.0 || ^16.8.0",
+    "uniforms": "4.0.0"
+  },
+  "dependencies": {
+    "invariant": "^2.0.0",
+    "lodash": "^4.0.0",
+    "tslib": "2.8.0"
+  },
+  "devDependencies": {
+    "@types/invariant": "2.2.37",
+    "@types/lodash": "4.17.5",
+    "@types/react": "18.3.12",
+    "typescript": "5.5.4",
+    "uniforms": "4.0.0"
+  },
+  "scripts": {
+    "build:cjs": "tsc --build tsconfig.cjs.json",
+    "build:esm": "tsc --build tsconfig.esm.json"
+  }
+}
